@@ -1,15 +1,21 @@
 package ie.gasgit.remote;
 
+import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+
+import org.json.JSONException;
 
 import java.io.ByteArrayOutputStream;
 import java.util.Properties;
@@ -25,13 +31,15 @@ public class MainActivity extends AppCompatActivity {
 
 
     //TODO
-    // fix async
-    // fix getters
+    // fix async //
+    // fix getters //
     // pgrep command to get pid
     // pkill process name
+    // validation on edit texts
+    // exceptions and messages
 
 
-      private static MySessionObjectDetails mso = new MySessionObjectDetails();
+    private static MySessionObjectDetails mso = new MySessionObjectDetails();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,32 +53,55 @@ public class MainActivity extends AppCompatActivity {
         etPass = findViewById(R.id.etPassword);
         btnSend = findViewById(R.id.btnSend);
 
-        addListenerOnButton();
+        try {
+            addListenerOnButton();
+        } catch (JSchException e) {
+            e.printStackTrace();
+        }
 
     }
 
-    public void addListenerOnButton() {
-
-
+    private void addListenerOnButton() throws JSchException {
         btnSend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-                getFields();
+                try {
+                    getFields();
+                } catch (Exception e) {
+
+                    e.printStackTrace();
+                    System.out.println("MyMessage: " +  e.getLocalizedMessage());
+                    Context context = getApplicationContext();
+
+                    int duration = Toast.LENGTH_SHORT;
+
+                    Toast toast = Toast.makeText(context, e.toString() , duration);
+                    toast.show();
+
+                }
                 new MyTask().execute();
-
-
             }
         });
-
-
     }
 
 
 
-    public void getFields() {
+    private void getFields() {
+
         // get values from fields editText
-        mso.setHostname(etIp.getText().toString());
+
+        String ipaddress = etIp.getText().toString();
+
+        if(TextUtils.isEmpty(ipaddress)) {
+            etIp.setError("IP Address Required");
+            return;
+        }else{
+            mso.setHostname(etIp.getText().toString());
+
+        }
+
+
         Integer i = Integer.valueOf(etPort.getText().toString());
         mso.setPort(i);
         mso.setUsername(etUser.getText().toString());
@@ -79,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public static String executeRemoteCommand(String username, String password, String hostname, int port)
+    private static void executeRemoteCommand(String username, String password, String hostname, int port)
             throws Exception {
         JSch jsch = new JSch();
         Session session = jsch.getSession(username, hostname, port);
@@ -95,7 +126,6 @@ public class MainActivity extends AppCompatActivity {
         // SSH Channel
         ChannelExec sshCH = (ChannelExec) session.openChannel("exec");
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
         sshCH.setOutputStream(baos);
 
         // Execute command
@@ -105,7 +135,6 @@ public class MainActivity extends AppCompatActivity {
 
         sshCH.disconnect();
 
-        return baos.toString();
     }
 
 
