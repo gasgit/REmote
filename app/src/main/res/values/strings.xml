@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">REmote</string>
+    <string name="ip">IP Address</string>
+    <string name="port">Port No</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="send">Send</string>
+    <string name="command">Command</string>
+
+
+</resources>
